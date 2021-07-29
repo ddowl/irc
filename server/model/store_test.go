@@ -10,29 +10,15 @@ func TestGetChatRoomMeta(t *testing.T) {
 	t.Run("new server has no chat rooms", func(t *testing.T) {
 		s := NewChatRoomStore()
 
-		meta := s.GetProxyMetadata()
+		meta := s.GetMetadata()
 
 		assert.Equal(t, 0, len(meta))
 	})
 
 	t.Run("server with several rooms", func(t *testing.T) {
-		rooms := make(map[int]*ChatRoom)
-		rooms[0] = &ChatRoom{
-			name: "room0",
-		}
-		rooms[1] = &ChatRoom{
-			name: "room1",
-		}
-		rooms[2] = &ChatRoom{
-			name: "room2",
-		}
+		s := storeWithThreeChatRooms()
 
-		s := ChatRoomStore{
-			roomCounter: 3,
-			chatRooms:   rooms,
-		}
-
-		meta := s.GetProxyMetadata()
+		meta := s.GetMetadata()
 
 		assert.Equal(t, 3, len(meta))
 	})
@@ -49,21 +35,7 @@ func TestAddChatRoom(t *testing.T) {
 	})
 
 	t.Run("server with existing rooms will have 1 more", func(t *testing.T) {
-		rooms := make(map[int]*ChatRoom)
-		rooms[0] = &ChatRoom{
-			name: "room0",
-		}
-		rooms[1] = &ChatRoom{
-			name: "room1",
-		}
-		rooms[2] = &ChatRoom{
-			name: "room2",
-		}
-
-		s := ChatRoomStore{
-			roomCounter: 3,
-			chatRooms:   rooms,
-		}
+		s := storeWithThreeChatRooms()
 
 		_, err := s.AddProxy("room3")
 
@@ -94,16 +66,9 @@ func TestGetChatRoom(t *testing.T) {
 	})
 
 	t.Run("returns room with associated ID", func(t *testing.T) {
-		roomID := 5
+		roomID := 1
 
-		rooms := make(map[int]*ChatRoom)
-		rooms[roomID] = &ChatRoom{
-			name: "room5",
-		}
-
-		s := ChatRoomStore{
-			chatRooms: rooms,
-		}
+		s := storeWithThreeChatRooms()
 
 		room, err := s.GetProxy(roomID)
 		assert.Nil(t, err)
@@ -120,19 +85,24 @@ func TestDeleteChatRoom(t *testing.T) {
 	})
 
 	t.Run("deletes room with associated ID", func(t *testing.T) {
-		roomID := 5
+		roomID := 1
 
-		rooms := make(map[int]*ChatRoom)
-		rooms[roomID] = &ChatRoom{
-			name: "room5",
-		}
-
-		s := ChatRoomStore{
-			chatRooms: rooms,
-		}
+		s := storeWithThreeChatRooms()
 
 		err := s.DeleteProxy(roomID)
 		assert.Nil(t, err)
-		assert.Equal(t, 0, len(s.chatRooms))
+		assert.Equal(t, 2, len(s.chatRooms))
 	})
+}
+
+func storeWithThreeChatRooms() *ChatRoomStore {
+	rooms := make(map[int]*ChatRoom)
+	rooms[0] = EmptyChatRoom(0, "room0")
+	rooms[1] = EmptyChatRoom(1, "room1")
+	rooms[2] = EmptyChatRoom(2, "room2")
+
+	return &ChatRoomStore{
+		roomCounter: 3,
+		chatRooms:   rooms,
+	}
 }
